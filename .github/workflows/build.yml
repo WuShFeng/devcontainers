@@ -14,9 +14,6 @@ jobs:
   # Image: ghcr.io/<owner>/devcontainer-qt-cross:latest
   # ---------------------------------------------------------------------------
   devcontainer-qt-cross:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      contains(github.event.head_commit.modified, 'qt-cross/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
