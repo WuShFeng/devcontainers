@@ -1,0 +1,42 @@
+name: Build and publish containers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - qt-cross/**
+      # New containers: add their directory here
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Qt cross-platform (Linux / Windows MinGW / Android)
+  # Image: ghcr.io/<owner>/devcontainer-qt-cross:latest
+  # ---------------------------------------------------------------------------
+  devcontainer-qt-cross:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'qt-cross/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: qt-cross
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/devcontainer-qt-cross:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

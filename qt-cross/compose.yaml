@@ -1,0 +1,43 @@
+# =============================================================================
+# docker compose build / docker compose up -d / docker compose exec qt-cross-dev bash
+# =============================================================================
+
+services:
+  qt-cross-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        TZ: Asia/Shanghai
+        LANG: zh_CN.UTF-8
+        # Uncomment to use a mirror closer to your region:
+        # APT_MIRROR: https://mirrors.cloud.tencent.com
+        # QT_MIRROR_BASE: https://mirrors.cloud.tencent.com/qt/
+
+    image: qt-cross-dev:latest
+    container_name: qt-cross-dev
+    hostname: qt-cross-dev
+    network_mode: bridge
+    stdin_open: true
+    tty: true
+
+    volumes:
+      - ..:/workspace:rw
+      # The paths below must match USERNAME in Dockerfile (default: devuser)
+      - ccache-data:/home/devuser/.ccache
+      - gradle-cache:/home/devuser/.gradle
+      - android-avd:/home/devuser/.android/avd
+
+    healthcheck:
+      test: ["CMD", "qmake", "--version"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  ccache-data:
+    driver: local
+  gradle-cache:
+    driver: local
+  android-avd:
+    driver: local
