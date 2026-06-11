@@ -136,9 +136,11 @@ ARG USER_GID=1000
 
 RUN if getent passwd ${USER_UID} >/dev/null; then \
     OLDUSER=$(getent passwd ${USER_UID} | cut -d: -f1); \
-    OLDGID=$(id -g ${OLDUSER} 2>/dev/null || echo ""); \
-    usermod -l ${USERNAME} -d /home/${USERNAME} -m ${OLDUSER} 2>/dev/null; \
-    [ -n "${OLDGID}" ] && groupmod -n ${USERNAME} ${OLDGID} 2>/dev/null || true; \
+    OLDGID=$(id -g ${OLDUSER}); \
+    OLDGROUP=$(getent group ${OLDGID} | cut -d: -f1); \
+    usermod -l ${USERNAME} -d /home/${USERNAME} -m ${OLDUSER}; \
+    groupmod -n ${USERNAME} ${OLDGROUP}; \
+    usermod -g ${USERNAME} ${USERNAME}; \
     else \
     groupadd --gid ${USER_GID} ${USERNAME}; \
     useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME}; \
