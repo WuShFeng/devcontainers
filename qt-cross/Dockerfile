@@ -10,7 +10,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ARG TZ=Asia/Shanghai
 ARG LANG=zh_CN.UTF-8
 ENV TZ=${TZ}
-ENV LANG=${LANG} LC_ALL=${LANG}
 
 # ---------------------------------------------------------------------------
 # 1. System packages
@@ -43,6 +42,7 @@ RUN apt-get update \
 RUN if [ -n "${LANG}" ]; then \
     sed -i "/${LANG}/s/^# //g" /etc/locale.gen && locale-gen; \
     fi
+ENV LANG=${LANG} LC_ALL=${LANG}
 
 # ---------------------------------------------------------------------------
 # 2. Android SDK / NDK
