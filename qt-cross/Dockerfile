@@ -7,8 +7,8 @@ FROM ubuntu:26.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG TZ
-ARG LANG
+ARG TZ=Asia/Shanghai
+ARG LANG=zh_CN.UTF-8
 ENV TZ=${TZ}
 ENV LANG=${LANG} LC_ALL=${LANG}
 
