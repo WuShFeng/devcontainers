@@ -94,7 +94,7 @@ USER ${USERNAME}
 CMD ["/bin/bash"]
 
 # =============================================================================
-# Target: ysyx-with-novnc (完整版 — 含 noVNC 远程桌面)
+# Target: ysyx-with-novnc (完整版 — 含 noVNC 远程桌面, Wayland)
 # =============================================================================
 
 FROM base AS ysyx-with-novnc
@@ -102,11 +102,12 @@ FROM base AS ysyx-with-novnc
 ARG USERNAME=devuser
 
 # ---------------------------------------------------------------------------
-# N.1 X11 / VNC / 音频 / Nginx 包
+# N.1 Wayland 合成器 / VNC / 音频 / Nginx 包
 # ---------------------------------------------------------------------------
 
 RUN pacman -Sy --noconfirm \
-    x11vnc xorg-server xf86-video-dummy openbox ttf-dejavu ttf-liberation \
+    labwc wayvnc xorg-xwayland mesa pixman \
+    ttf-dejavu ttf-liberation \
     pulseaudio ffmpeg nginx \
     && rm -rf /var/cache/pacman/pkg/*
 
@@ -122,8 +123,6 @@ RUN git clone --depth 1 https://github.com/novnc/noVNC.git /usr/share/novnc \
 # ---------------------------------------------------------------------------
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY Xheadless.conf /etc/X11/xorg.conf.d/Xheadless.conf
-COPY Xwrapper.config /etc/X11/Xwrapper.config
 
 # ---------------------------------------------------------------------------
 # N.4 辅助脚本
@@ -136,7 +135,7 @@ RUN chmod +x /usr/local/bin/display.sh
 # N.5 运行时环境变量
 # ---------------------------------------------------------------------------
 
-ENV DISPLAY=:0
+ENV WAYLAND_DISPLAY=wayland-0
 ENV PULSE_SERVER=unix:/tmp/pulse/native
 ENV XDG_RUNTIME_DIR=/tmp/xdg-runtime-dir
 
