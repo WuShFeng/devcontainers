@@ -128,8 +128,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # N.4 辅助脚本
 # ---------------------------------------------------------------------------
 
-COPY display.sh /usr/local/bin/display.sh
-RUN chmod +x /usr/local/bin/display.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ---------------------------------------------------------------------------
 # N.5 运行时环境变量
@@ -156,4 +156,5 @@ RUN pipx install websockify && \
     rm -rf /home/${USERNAME}/.cache/pip /home/${USERNAME}/.cache/pipx
 
 EXPOSE 6080
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
