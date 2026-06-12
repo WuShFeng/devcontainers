@@ -29,7 +29,7 @@ RUN export LANG=C.UTF-8 LC_ALL=C.UTF-8 \
     build-essential cmake ninja-build pkg-config ccache gdb \
     git git-lfs wget curl gnupg unzip xz-utils file \
     python3 python3-pip python3-venv \
-    vim nano less locales \
+    vim nano less locales clangd \
     openjdk-21-jdk-headless \
     mingw-w64 g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 \
     sudo \
