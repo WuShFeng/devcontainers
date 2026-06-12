@@ -37,7 +37,7 @@ RUN apt-get update \
     libxkbcommon-dev \
     libssl-dev libdbus-1-dev \
     libwayland-egl1 libwayland-cursor0 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN if [ -n "${LANG}" ]; then \
     sed -i "/${LANG}/s/^# //g" /etc/locale.gen && locale-gen; \
@@ -74,8 +74,8 @@ RUN ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install \
     "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" \
     "ndk;${ANDROID_NDK_VERSION}" \
     "cmake;${ANDROID_CMAKE_VERSION}" \
-    "emulator" \
-    2>/dev/null || echo "Some Android components may need a retry"
+    2>/dev/null || echo "Some Android components may need a retry" \
+    && rm -rf ${ANDROID_SDK_ROOT}/.temp ${ANDROID_SDK_ROOT}/.cache /root/.android/cache /tmp/* /var/tmp/*
 
 # ---------------------------------------------------------------------------
 # 3. Qt (via aqtinstall)
@@ -86,14 +86,15 @@ ARG QT_INSTALL_DIR=/opt/Qt
 ARG QT_LINUX_ARCH=linux_gcc_64
 ARG QT_MINGW_ARCH=win64_mingw
 ARG QT_MIRROR_BASE=""
-ARG QT_MODULES="qt5compat qtimageformats qtshadertools qtmultimedia qtwebsockets qtwebchannel qtquick3d qtquicktimeline"
+ARG QT_MODULES="qt5compat qtimageformats qtshadertools qtmultimedia qtwebsockets qtwebchannel"
 
 ENV QT_VERSION=${QT_VERSION}
 ENV QT_INSTALL_DIR=${QT_INSTALL_DIR}
 
 # aqtinstall
 RUN python3 -m venv /opt/venv-qt \
-    && /opt/venv-qt/bin/pip install --no-cache-dir aqtinstall
+    && /opt/venv-qt/bin/pip install --no-cache-dir aqtinstall \
+    && rm -rf /root/.cache/pip /tmp/* /var/tmp/*
 
 # Linux host Qt (build tools moc/uic/rcc + native builds)
 RUN /opt/venv-qt/bin/aqt install-qt \
@@ -101,7 +102,8 @@ RUN /opt/venv-qt/bin/aqt install-qt \
     --outputdir ${QT_INSTALL_DIR} \
     $( [ -n "${QT_MIRROR_BASE}" ] && echo "-b ${QT_MIRROR_BASE}" ) \
     -m ${QT_MODULES} \
-    && echo "Qt ${QT_VERSION} Linux installed"
+    && echo "Qt ${QT_VERSION} Linux installed" \
+    && find ${QT_INSTALL_DIR}/${QT_VERSION}/${QT_LINUX_ARCH} -name '*.so*' -type f -exec strip --strip-unneeded {} \; 2>/dev/null || true
 
 # Windows MinGW target Qt (cross-compile dependency)
 RUN /opt/venv-qt/bin/aqt install-qt \
@@ -109,7 +111,8 @@ RUN /opt/venv-qt/bin/aqt install-qt \
     --outputdir ${QT_INSTALL_DIR} \
     $( [ -n "${QT_MIRROR_BASE}" ] && echo "-b ${QT_MIRROR_BASE}" ) \
     -m ${QT_MODULES} \
-    && echo "Qt ${QT_VERSION} Windows MinGW installed"
+    && echo "Qt ${QT_VERSION} Windows MinGW installed" \
+    && find ${QT_INSTALL_DIR}/${QT_VERSION}/${QT_MINGW_ARCH} \( -name '*.dll' -o -name '*.exe' \) -exec x86_64-w64-mingw32-strip --strip-unneeded {} \; 2>/dev/null || true
 
 # Android target Qt (cross-compile dependency)
 RUN /opt/venv-qt/bin/aqt install-qt \
@@ -117,7 +120,9 @@ RUN /opt/venv-qt/bin/aqt install-qt \
     --outputdir ${QT_INSTALL_DIR} \
     $( [ -n "${QT_MIRROR_BASE}" ] && echo "-b ${QT_MIRROR_BASE}" ) \
     -m ${QT_MODULES} \
-    && echo "Qt ${QT_VERSION} Android installed"
+    && echo "Qt ${QT_VERSION} Android installed" \
+    && find ${QT_INSTALL_DIR}/${QT_VERSION}/android_arm64_v8a -name '*.so*' -type f -exec ${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip --strip-unneeded {} \; 2>/dev/null || true \
+    && rm -rf /root/.aqt /tmp/* /var/tmp/*
 
 # Qt environment variables
 ENV QT_HOST_PATH=${QT_INSTALL_DIR}/${QT_VERSION}/gcc_64
