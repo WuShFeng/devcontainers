@@ -30,7 +30,7 @@ RUN export LANG=C.UTF-8 LC_ALL=C.UTF-8 \
     git git-lfs wget curl gnupg unzip xz-utils file \
     python3 python3-pip python3-venv \
     vim nano less locales \
-    openjdk-21-jre-headless \
+    openjdk-21-jdk-headless \
     mingw-w64 g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 \
     sudo \
     libfontconfig1-dev libfreetype6-dev \
@@ -51,8 +51,8 @@ ENV LANG=${LANG} LC_ALL=${LANG}
 
 ARG ANDROID_SDK_ROOT=/opt/android-sdk
 ARG ANDROID_NDK_VERSION=27.3.13750724
-ARG ANDROID_PLATFORM_VERSION=34
-ARG ANDROID_BUILD_TOOLS_VERSION=34.0.0
+ARG ANDROID_PLATFORM_VERSION=35
+ARG ANDROID_BUILD_TOOLS_VERSION=35.0.0
 ARG ANDROID_CMAKE_VERSION=3.22.1
 ARG ANDROID_CMDLINE_TOOLS_URL=https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 
