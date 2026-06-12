@@ -17,7 +17,8 @@ ENV TZ=${TZ}
 
 # APT mirror (defaults to Ubuntu official when not set)
 ARG APT_MIRROR=""
-RUN apt-get update \
+RUN export LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+    && apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
     && if [ -n "${APT_MIRROR}" ]; then \
     sed -i "s|http://archive.ubuntu.com|${APT_MIRROR}|g" /etc/apt/sources.list.d/ubuntu.sources \
