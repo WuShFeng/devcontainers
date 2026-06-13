@@ -108,31 +108,36 @@ ARG USERNAME=devuser
 RUN pacman -Sy --noconfirm \
     labwc wayvnc xorg-xwayland mesa pixman \
     ttf-dejavu ttf-liberation \
-    pulseaudio ffmpeg nginx \
+    pulseaudio ffmpeg nginx socat \
     && rm -rf /var/cache/pacman/pkg/*
 
 # ---------------------------------------------------------------------------
-# N.2 noVNC (remote desktop web frontend)
+# N.2 noVNC (remote desktop web frontend, from submodule)
 # ---------------------------------------------------------------------------
 
-RUN git clone --depth 1 https://github.com/novnc/noVNC.git /usr/share/novnc \
-    && rm -rf /usr/share/novnc/.git
+COPY noVNC /usr/share/novnc
 
 # ---------------------------------------------------------------------------
-# N.3 Configuration files
+# N.3 Audio reader (PulseAudio → WebSocket → Web Audio API)
+# ---------------------------------------------------------------------------
+
+COPY audio /usr/share/audio
+
+# ---------------------------------------------------------------------------
+# N.4 Configuration files
 # ---------------------------------------------------------------------------
 
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # ---------------------------------------------------------------------------
-# N.4 Helper scripts
+# N.5 Helper scripts
 # ---------------------------------------------------------------------------
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ---------------------------------------------------------------------------
-# N.5 Runtime environment variables
+# N.6 Runtime environment variables
 # ---------------------------------------------------------------------------
 
 ENV WAYLAND_DISPLAY=wayland-0
@@ -140,7 +145,7 @@ ENV PULSE_SERVER=unix:/tmp/pulse/native
 ENV XDG_RUNTIME_DIR=/tmp/xdg-runtime-dir
 
 # ---------------------------------------------------------------------------
-# N.6 Runtime directories
+# N.7 Runtime directories
 # ---------------------------------------------------------------------------
 
 RUN mkdir -p /tmp/pulse ${XDG_RUNTIME_DIR} && \
@@ -148,7 +153,7 @@ RUN mkdir -p /tmp/pulse ${XDG_RUNTIME_DIR} && \
     chmod 700 ${XDG_RUNTIME_DIR}
 
 # ---------------------------------------------------------------------------
-# N.7 websockify (VNC → WebSocket bridge)
+# N.8 websockify (VNC → WebSocket + audio stream bridges)
 # ---------------------------------------------------------------------------
 
 USER ${USERNAME}
