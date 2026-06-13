@@ -57,7 +57,7 @@ start_display() {
     # Nginx (noVNC frontend)
     sudo nginx
 
-    echo "[entrypoint] Display services started — noVNC at :6080, audio at :6080/audio/whep"
+    echo "[entrypoint] Display services started — noVNC at :6080, audio at :6080/audio/stream"
 }
 
 start_display

@@ -1,27 +1,23 @@
 /**
  * PulseAudio over WebSocket audio reader.
  *
- * Reimplements the MediaMTXWebRTCReader interface so the existing noVNC fork
- * works without modification.  Instead of WebRTC / WHEP, this opens a raw
- * WebSocket to the nginx-proxied PulseAudio PCM stream and plays it through
- * the Web Audio API.
+ * Opens a raw WebSocket to the nginx-proxied PulseAudio PCM stream and plays it
+ * through the Web Audio API.  No WebRTC / codec overhead — just raw PCM.
  *
  * Expected PCM format: s16le, 44100 Hz, 2 channels (interleaved)
  */
-class MediaMTXWebRTCReader {
+class PulseAudioReader {
     /**
-     * @param {Object}  opts
-     * @param {string}  opts.url      WebSocket URL for the audio stream
+     * @param {Object}   opts
+     * @param {string}   opts.url      WebSocket URL for the audio stream
      * @param {Function} opts.onError  Called on connection errors
-     * @param {Function} opts.onTrack  Kept for API compatibility — never called
      */
-    constructor({ url, onError, onTrack }) {
+    constructor({ url, onError }) {
         this._url = url;
         this._onError = onError;
         this._ws = null;
         this._ctx = null;
         this._nextTime = 0;
-        this._chunkMs = 0;
         this._connect();
     }
 
