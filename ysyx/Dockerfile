@@ -1,10 +1,10 @@
 # =============================================================================
-# ysyx — RISC-V 开发容器 (基于 Arch Linux)
-# 包含 RISC-V GNU 工具链、Verilator、Yosys 等硬件开发工具
+# ysyx — RISC-V development container (based on Arch Linux)
+# Includes RISC-V GNU toolchain, Verilator, Yosys, and other hardware dev tools
 #
-# 构建目标:
-#   docker build --target ysyx ...             → 精简版 (无图形桌面)
-#   docker build --target ysyx-with-novnc ...  → 完整版 (含 noVNC 远程桌面)
+# Build targets:
+#   docker build --target ysyx ...             → minimal (no GUI)
+#   docker build --target ysyx-with-novnc ...  → full (with noVNC remote desktop)
 # =============================================================================
 
 FROM docker.io/wushf/riscv-gnu-toolchain:master AS riscv-gnu-toolchain
@@ -47,7 +47,7 @@ RUN for f in /opt/riscv/bin/riscv64-unknown-linux-gnu-*; do \
     done
 
 # ---------------------------------------------------------------------------
-# 3. Mill (Scala 构建工具)
+# 3. Mill (Scala build tool)
 # ---------------------------------------------------------------------------
 
 RUN curl -L https://repo1.maven.org/maven2/com/lihaoyu/mill-dist/1.0.6/mill-dist-1.0.6-mill.sh \
@@ -55,13 +55,13 @@ RUN curl -L https://repo1.maven.org/maven2/com/lihaoyu/mill-dist/1.0.6/mill-dist
         chmod a+x /usr/local/bin/mill
 
 # ---------------------------------------------------------------------------
-# 4. Shell 配置 (shared)
+# 4. Shell config (shared)
 # ---------------------------------------------------------------------------
 
 COPY .bashrc /etc/skel/.bashrc
 
 # ---------------------------------------------------------------------------
-# 5. 开发用户 (shared, 保持 root 以便后续阶段扩展)
+# 5. Development user (shared, keep root for later stage extensibility)
 # ---------------------------------------------------------------------------
 
 ARG USERNAME=devuser
@@ -79,12 +79,12 @@ RUN if getent passwd ${USER_UID} >/dev/null; then \
         groupadd --gid ${USER_GID} ${USERNAME}; \
         useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME}; \
     fi \
-    && echo '${USERNAME} ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/${USERNAME}
+    && echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USERNAME}
 
 RUN chown -R ${USERNAME}:${USERNAME} /workspaces
 
 # =============================================================================
-# Target: ysyx (精简版 — 无图形桌面，适用于 Windows WSLg)
+# Target: ysyx (minimal — no GUI, suitable for Windows WSLg)
 # =============================================================================
 
 FROM base AS ysyx
@@ -94,7 +94,7 @@ USER ${USERNAME}
 CMD ["/bin/bash"]
 
 # =============================================================================
-# Target: ysyx-with-novnc (完整版 — 含 noVNC 远程桌面, Wayland)
+# Target: ysyx-with-novnc (full — with noVNC remote desktop, Wayland)
 # =============================================================================
 
 FROM base AS ysyx-with-novnc
@@ -102,7 +102,7 @@ FROM base AS ysyx-with-novnc
 ARG USERNAME=devuser
 
 # ---------------------------------------------------------------------------
-# N.1 Wayland 合成器 / VNC / 音频 / Nginx 包
+# N.1 Wayland compositor / VNC / Audio / Nginx packages
 # ---------------------------------------------------------------------------
 
 RUN pacman -Sy --noconfirm \
@@ -112,27 +112,27 @@ RUN pacman -Sy --noconfirm \
     && rm -rf /var/cache/pacman/pkg/*
 
 # ---------------------------------------------------------------------------
-# N.2 noVNC (远程桌面 Web 前端)
+# N.2 noVNC (remote desktop web frontend)
 # ---------------------------------------------------------------------------
 
 RUN git clone --depth 1 https://github.com/novnc/noVNC.git /usr/share/novnc \
     && rm -rf /usr/share/novnc/.git
 
 # ---------------------------------------------------------------------------
-# N.3 配置文件
+# N.3 Configuration files
 # ---------------------------------------------------------------------------
 
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # ---------------------------------------------------------------------------
-# N.4 辅助脚本
+# N.4 Helper scripts
 # ---------------------------------------------------------------------------
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ---------------------------------------------------------------------------
-# N.5 运行时环境变量
+# N.5 Runtime environment variables
 # ---------------------------------------------------------------------------
 
 ENV WAYLAND_DISPLAY=wayland-0
@@ -140,7 +140,7 @@ ENV PULSE_SERVER=unix:/tmp/pulse/native
 ENV XDG_RUNTIME_DIR=/tmp/xdg-runtime-dir
 
 # ---------------------------------------------------------------------------
-# N.6 运行时目录
+# N.6 Runtime directories
 # ---------------------------------------------------------------------------
 
 RUN mkdir -p /tmp/pulse ${XDG_RUNTIME_DIR} && \
@@ -148,7 +148,7 @@ RUN mkdir -p /tmp/pulse ${XDG_RUNTIME_DIR} && \
     chmod 700 ${XDG_RUNTIME_DIR}
 
 # ---------------------------------------------------------------------------
-# N.7 websockify (VNC → WebSocket 桥接)
+# N.7 websockify (VNC → WebSocket bridge)
 # ---------------------------------------------------------------------------
 
 USER ${USERNAME}
