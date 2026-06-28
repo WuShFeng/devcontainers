@@ -2,17 +2,18 @@ alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias ll='ls -lah'
 # Pyenv
-export PYENV_ROOT=$HOME/.pyenv
+export PYENV_ROOT=/usr/local/pyenv
 export PATH=$PYENV_ROOT/bin:$HOME/.local/bin:$PATH
 eval "$(pyenv init - bash)"
 
 # nvm
-export NVM_DIR="$HOME/.nvm"
-[ -s /usr/share/nvm/init-nvm.sh ] && source /usr/share/nvm/init-nvm.sh
+export NVM_DIR="/usr/local/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # Git PS1
-if [ -f /usr/share/git/completion/git-prompt.sh ]; then
-    source /usr/share/git/completion/git-prompt.sh
+if [ -f /usr/lib/git-core/git-sh-prompt ]; then
+    source /usr/lib/git-core/git-sh-prompt
 fi
 export GIT_PS1_SHOWDIRTYSTATE=true
 export GIT_PS1_SHOWSTASHSTATE=true

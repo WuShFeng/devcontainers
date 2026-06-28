@@ -1,18 +1,15 @@
 # =============================================================================
-# ysyx — RISC-V development container (based on Arch Linux)
+# ysyx — RISC-V development container (based on Ubuntu 26.04)
 # Includes RISC-V GNU toolchain, Verilator, Yosys, and other hardware dev tools
-#
-# Build targets:
-#   docker build --target ysyx ...             → minimal (no GUI)
-#   docker build --target ysyx-with-novnc ...  → full (with noVNC remote desktop)
 # =============================================================================
 
 FROM docker.io/wushf/riscv-gnu-toolchain:master AS riscv-gnu-toolchain
-FROM docker.io/library/archlinux:latest AS base
+FROM docker.io/library/ubuntu:26.04 AS base
 
 ARG TZ=Asia/Shanghai
 ARG LANG=zh_CN.UTF-8
 ENV TZ=${TZ}
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /workspaces
 ENV PATH="/usr/lib/ccache/bin:/opt/riscv/bin:${PATH}"
@@ -21,14 +18,21 @@ ENV PATH="/usr/lib/ccache/bin:/opt/riscv/bin:${PATH}"
 # 1. System packages (shared)
 # ---------------------------------------------------------------------------
 
-RUN pacman -Sy --noconfirm \
-    sudo vim nano git autoconf which bear openssh lsof less wget \
-    sdl2_image sdl2_ttf sdl2-compat clang yosys jdk17-openjdk bash-completion \
-    ccache base-devel \
-    pyenv tk python-pipx \
-    nvm \
-    verilator \
-    && rm -rf /var/cache/pacman/pkg/*
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates locales \
+    && if [ -n "${LANG}" ]; then \
+        sed -i "/${LANG}/s/^# //g" /etc/locale.gen && locale-gen; \
+    fi \
+    && apt-get install -y --no-install-recommends \
+        sudo vim nano git autoconf bear openssh-client lsof less wget \
+        libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev \
+        clang yosys openjdk-17-jdk-headless bash-completion \
+        ccache build-essential curl \
+        python3-tk pipx \
+        verilator \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=${LANG} LC_ALL=${LANG}
 
 # ---------------------------------------------------------------------------
 # 2. RISC-V GNU Toolchain (from pre-built image)
@@ -55,13 +59,29 @@ RUN curl -L https://repo1.maven.org/maven2/com/lihaoyu/mill-dist/1.0.6/mill-dist
         chmod a+x /usr/local/bin/mill
 
 # ---------------------------------------------------------------------------
-# 4. Shell config (shared)
+# 4. pyenv (system-wide)
+# ---------------------------------------------------------------------------
+
+RUN git clone --depth 1 https://github.com/pyenv/pyenv.git /usr/local/pyenv
+ENV PYENV_ROOT=/usr/local/pyenv
+ENV PATH="${PYENV_ROOT}/bin:${PATH}"
+
+# ---------------------------------------------------------------------------
+# 5. nvm (system-wide)
+# ---------------------------------------------------------------------------
+
+ENV NVM_DIR=/usr/local/nvm
+RUN mkdir -p ${NVM_DIR} \
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# ---------------------------------------------------------------------------
+# 6. Shell config (shared)
 # ---------------------------------------------------------------------------
 
 COPY .bashrc /etc/skel/.bashrc
 
 # ---------------------------------------------------------------------------
-# 5. Development user (shared, keep root for later stage extensibility)
+# 7. Development user (shared, keep root for later stage extensibility)
 # ---------------------------------------------------------------------------
 
 ARG USERNAME=devuser
@@ -81,85 +101,14 @@ RUN if getent passwd ${USER_UID} >/dev/null; then \
     fi \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USERNAME}
 
-RUN chown -R ${USERNAME}:${USERNAME} /workspaces
+RUN chown -R ${USERNAME}:${USERNAME} /workspaces /usr/local/nvm
 
 # =============================================================================
-# Target: ysyx (minimal — no GUI, suitable for Windows WSLg)
+# Target: ysyx
 # =============================================================================
 
 FROM base AS ysyx
 
 ARG USERNAME=devuser
 USER ${USERNAME}
-CMD ["/bin/bash"]
-
-# =============================================================================
-# Target: ysyx-with-novnc (full — with noVNC remote desktop, Wayland)
-# =============================================================================
-
-FROM base AS ysyx-with-novnc
-
-ARG USERNAME=devuser
-
-# ---------------------------------------------------------------------------
-# N.1 Wayland compositor / VNC / Audio / Nginx packages
-# ---------------------------------------------------------------------------
-
-RUN pacman -Sy --noconfirm \
-    labwc wayvnc xorg-xwayland mesa pixman \
-    ttf-dejavu ttf-liberation \
-    pulseaudio ffmpeg nginx socat \
-    && rm -rf /var/cache/pacman/pkg/*
-
-# ---------------------------------------------------------------------------
-# N.2 noVNC (remote desktop web frontend, from submodule)
-# ---------------------------------------------------------------------------
-
-COPY noVNC /usr/share/novnc
-
-# ---------------------------------------------------------------------------
-# N.3 Audio reader (PulseAudio → WebSocket → Web Audio API)
-# ---------------------------------------------------------------------------
-
-COPY audio /usr/share/audio
-
-# ---------------------------------------------------------------------------
-# N.4 Configuration files
-# ---------------------------------------------------------------------------
-
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# ---------------------------------------------------------------------------
-# N.5 Helper scripts
-# ---------------------------------------------------------------------------
-
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# ---------------------------------------------------------------------------
-# N.6 Runtime environment variables
-# ---------------------------------------------------------------------------
-
-ENV WAYLAND_DISPLAY=wayland-0
-ENV PULSE_SERVER=unix:/tmp/pulse/native
-ENV XDG_RUNTIME_DIR=/tmp/xdg-runtime-dir
-
-# ---------------------------------------------------------------------------
-# N.7 Runtime directories
-# ---------------------------------------------------------------------------
-
-RUN mkdir -p /tmp/pulse ${XDG_RUNTIME_DIR} && \
-    chmod 777 /tmp/pulse && \
-    chmod 700 ${XDG_RUNTIME_DIR}
-
-# ---------------------------------------------------------------------------
-# N.8 websockify (VNC → WebSocket + audio stream bridges)
-# ---------------------------------------------------------------------------
-
-USER ${USERNAME}
-RUN pipx install websockify && \
-    rm -rf /home/${USERNAME}/.cache/pip /home/${USERNAME}/.cache/pipx
-
-EXPOSE 6080
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
