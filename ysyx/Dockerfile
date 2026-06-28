@@ -10,6 +10,7 @@ ARG TZ=Asia/Shanghai
 ARG LANG=zh_CN.UTF-8
 ENV TZ=${TZ}
 ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
 
 WORKDIR /workspaces
 ENV PATH="/usr/lib/ccache/bin:/opt/riscv/bin:${PATH}"
@@ -26,7 +27,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         sudo vim nano git autoconf bear openssh-client lsof less wget \
         libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev \
-        clang yosys openjdk-17-jdk-headless bash-completion \
+        clang yosys openjdk-21-jdk-headless bash-completion \
         ccache build-essential curl \
         python3-tk pipx \
         verilator \
@@ -54,7 +55,7 @@ RUN for f in /opt/riscv/bin/riscv64-unknown-linux-gnu-*; do \
 # 3. Mill (Scala build tool)
 # ---------------------------------------------------------------------------
 
-RUN curl -L https://repo1.maven.org/maven2/com/lihaoyu/mill-dist/1.0.6/mill-dist-1.0.6-mill.sh \
+RUN curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.7/mill-dist-1.1.7-mill.sh \
         -o /usr/local/bin/mill && \
         chmod a+x /usr/local/bin/mill
 
