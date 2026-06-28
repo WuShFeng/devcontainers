@@ -41,7 +41,8 @@ ENV LANG=${LANG} LC_ALL=${LANG}
 
 COPY --from=riscv-gnu-toolchain /opt/riscv /opt/riscv
 
-RUN for f in /opt/riscv/bin/riscv64-unknown-linux-gnu-*; do \
+RUN mkdir -p /usr/lib/ccache/bin && \
+    for f in /opt/riscv/bin/riscv64-unknown-linux-gnu-*; do \
         base=$(basename "$f"); \
         linkname="/opt/riscv/bin/${base/-unknown/}"; \
         ln -sf "$f" "$linkname"; \
