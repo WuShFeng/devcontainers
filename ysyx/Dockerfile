@@ -26,6 +26,7 @@ RUN apt-get update \
     fi \
     && apt-get install -y --no-install-recommends \
         sudo vim nano git autoconf bear openssh-client lsof less wget \
+        libfl2 \
         libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev \
         clang yosys openjdk-21-jdk-headless bash-completion \
         ccache build-essential curl \
