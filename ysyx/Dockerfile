@@ -3,7 +3,6 @@
 # Includes RISC-V GNU toolchain, Verilator, Yosys, and other hardware dev tools
 # =============================================================================
 
-FROM docker.io/wushf/riscv-gnu-toolchain:master AS riscv-gnu-toolchain
 FROM docker.io/library/ubuntu:26.04 AS base
 
 ARG TZ=Asia/Shanghai
@@ -13,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /workspaces
-ENV PATH="/usr/lib/ccache/bin:/opt/riscv/bin:${PATH}"
+ENV PATH="/usr/lib/ccache/bin:${PATH}"
 
 # ---------------------------------------------------------------------------
 # 1. System packages (shared)
@@ -40,18 +39,11 @@ RUN apt-get update \
 ENV LANG=${LANG} LC_ALL=${LANG}
 
 # ---------------------------------------------------------------------------
-# 2. RISC-V GNU Toolchain (from pre-built image)
+# 2. ccache wrappers (transparent compiler caching)
 # ---------------------------------------------------------------------------
 
-COPY --from=riscv-gnu-toolchain /opt/riscv /opt/riscv
-
 RUN mkdir -p /usr/lib/ccache/bin && \
-    for f in /opt/riscv/bin/riscv64-unknown-linux-gnu-*; do \
-        base=$(basename "$f"); \
-        linkname="/opt/riscv/bin/${base/-unknown/}"; \
-        ln -sf "$f" "$linkname"; \
-    done && \
-    for f in /opt/riscv/bin/riscv64-*-gcc /opt/riscv/bin/riscv64-*-g++ /usr/bin/{gcc,g++,clang,clang++}; do \
+    for f in /usr/bin/{gcc,g++,clang,clang++,riscv64-linux-gnu-gcc,riscv64-linux-gnu-g++}; do \
         [ -e "$f" ] || continue; \
         ln -sf "/usr/bin/ccache" "/usr/lib/ccache/bin/$(basename $f)"; \
     done
