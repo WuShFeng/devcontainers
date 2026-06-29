@@ -33,7 +33,7 @@ RUN apt-get update \
         verilator \
         gcc-riscv64-linux-gnu \
         binutils-riscv64-linux-gnu \
-        g++-riscv64-linux-gnu
+        g++-riscv64-linux-gnu \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=${LANG} LC_ALL=${LANG}
