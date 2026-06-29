@@ -1,10 +1,5 @@
-# =============================================================================
-# ysyx — RISC-V development container (based on Ubuntu 26.04)
-# Includes RISC-V GNU toolchain, Verilator, Yosys, and other hardware dev tools
-# =============================================================================
-
+FROM docker.io/wushf/riscv-gnu-toolchain:2026.6.29 AS riscv-gnu-toolchain
 FROM docker.io/library/ubuntu:26.04 AS base
-
 ARG TZ=Asia/Shanghai
 ARG LANG=zh_CN.UTF-8
 ENV TZ=${TZ}
@@ -14,10 +9,7 @@ SHELL ["/bin/bash", "-c"]
 WORKDIR /workspaces
 ENV PATH="/usr/lib/ccache/bin:${PATH}"
 
-# ---------------------------------------------------------------------------
-# 1. System packages (shared)
-# ---------------------------------------------------------------------------
-
+# System packages
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates locales \
     && if [ -n "${LANG}" ]; then \
@@ -31,61 +23,51 @@ RUN apt-get update \
         ccache build-essential curl \
         python-is-python3 bison flex\
         verilator \
-        gcc-riscv64-linux-gnu \
-        binutils-riscv64-linux-gnu \
-        g++-riscv64-linux-gnu \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=${LANG} LC_ALL=${LANG}
 
-# ---------------------------------------------------------------------------
-# 2. ccache wrappers (transparent compiler caching)
-# ---------------------------------------------------------------------------
+# riscv-gnu-toolchain
+COPY --from=riscv-gnu-toolchain /opt/riscv /opt/riscv
 
+# ccache wrappers
 RUN mkdir -p /usr/lib/ccache/bin && \
-    for f in /usr/bin/{gcc,g++,clang,clang++,riscv64-linux-gnu-gcc,riscv64-linux-gnu-g++}; do \
+    for f in /usr/bin/{gcc,g++,clang,clang++}; do \
         [ -e "$f" ] || continue; \
         ln -sf "/usr/bin/ccache" "/usr/lib/ccache/bin/$(basename $f)"; \
+    done && \
+    for tool in gcc g++ c++ cpp; do \
+        for f in /opt/riscv/bin/riscv64-*-$tool; do \
+            if [ -f "$f" ] && [ -x "$f" ]; then \
+                filename=$(basename "$f"); \
+                ln -sf /usr/bin/ccache "/usr/lib/ccache/bin/$filename"; \
+            fi; \
+        done; \
     done
 
-# ---------------------------------------------------------------------------
-# 3. Mill (Scala build tool)
-# ---------------------------------------------------------------------------
-
+# Mill (Scala build tool)
 RUN curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.7/mill-dist-1.1.7-mill.sh \
         -o /usr/local/bin/mill && \
         chmod a+x /usr/local/bin/mill
 
-# ---------------------------------------------------------------------------
-# 4. pyenv (system-wide)
-# ---------------------------------------------------------------------------
-
+# pyenv (system-wide)
 RUN git clone --depth 1 https://github.com/pyenv/pyenv.git /usr/local/pyenv
 ENV PYENV_ROOT=/usr/local/pyenv
 ENV PATH="${PYENV_ROOT}/bin:${PATH}"
 
-# ---------------------------------------------------------------------------
-# 5. nvm (system-wide)
-# ---------------------------------------------------------------------------
-
+# nvm (system-wide)
 ENV NVM_DIR=/usr/local/nvm
 RUN mkdir -p ${NVM_DIR} \
     && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
 
-# ---------------------------------------------------------------------------
-# 6. Shell config (shared)
-# ---------------------------------------------------------------------------
-
+# Shell config (shared)
 COPY .bashrc /etc/skel/.bashrc
 
-# ---------------------------------------------------------------------------
-# 7. Development user (shared, keep root for later stage extensibility)
-# ---------------------------------------------------------------------------
+# Development user (shared, keep root for later stage extensibility)
 
 ARG USERNAME=devuser
 ARG USER_UID=1000
 ARG USER_GID=1000
-
 RUN if getent passwd ${USER_UID} >/dev/null; then \
         OLDUSER=$(getent passwd ${USER_UID} | cut -d: -f1); \
         OLDGID=$(id -g ${OLDUSER}); \
@@ -101,10 +83,7 @@ RUN if getent passwd ${USER_UID} >/dev/null; then \
 
 RUN chown -R ${USERNAME}:${USERNAME} /workspaces /usr/local/nvm
 
-# =============================================================================
 # Target: ysyx
-# =============================================================================
-
 FROM base AS ysyx
 
 ARG USERNAME=devuser
