@@ -27,11 +27,14 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         sudo vim nano git autoconf bear openssh-client lsof less wget \
         libfl2 \
-        libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev \
+        libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev libncurses-dev libreadline-dev\
         clang yosys openjdk-21-jdk-headless bash-completion \
         ccache build-essential curl \
-        python3-tk pipx \
+        python-is-python3 bison flex\
         verilator \
+        gcc-riscv64-linux-gnu \
+        binutils-riscv64-linux-gnu \
+        g++-riscv64-linux-gnu
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=${LANG} LC_ALL=${LANG}
@@ -75,7 +78,7 @@ ENV PATH="${PYENV_ROOT}/bin:${PATH}"
 
 ENV NVM_DIR=/usr/local/nvm
 RUN mkdir -p ${NVM_DIR} \
-    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
 
 # ---------------------------------------------------------------------------
 # 6. Shell config (shared)
