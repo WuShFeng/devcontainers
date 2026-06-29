@@ -1,3 +1,4 @@
+FROM docker.io/verilator/verilator:v5.048 AS verilator
 FROM docker.io/wushf/riscv-gnu-toolchain:2026.6.29 AS riscv-gnu-toolchain
 FROM docker.io/library/ubuntu:26.04 AS base
 ARG TZ=Asia/Shanghai
@@ -7,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /workspaces
-ENV PATH="/usr/lib/ccache/bin:${PATH}"
+ENV PATH="/usr/lib/ccache:/opt/riscv/bin:${PATH}"
 
 # System packages
 RUN apt-get update \
@@ -22,7 +23,6 @@ RUN apt-get update \
         clang yosys openjdk-21-jdk-headless bash-completion \
         ccache build-essential curl \
         python-is-python3 bison flex\
-        verilator \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=${LANG} LC_ALL=${LANG}
@@ -31,19 +31,19 @@ ENV LANG=${LANG} LC_ALL=${LANG}
 COPY --from=riscv-gnu-toolchain /opt/riscv /opt/riscv
 
 # ccache wrappers
-RUN mkdir -p /usr/lib/ccache/bin && \
-    for f in /usr/bin/{gcc,g++,clang,clang++}; do \
-        [ -e "$f" ] || continue; \
-        ln -sf "/usr/bin/ccache" "/usr/lib/ccache/bin/$(basename $f)"; \
-    done && \
-    for tool in gcc g++ c++ cpp; do \
+RUN update-ccache-symlinks && \
+    for tool in gcc g++ clang clang++; do \
         for f in /opt/riscv/bin/riscv64-*-$tool; do \
             if [ -f "$f" ] && [ -x "$f" ]; then \
                 filename=$(basename "$f"); \
-                ln -sf /usr/bin/ccache "/usr/lib/ccache/bin/$filename"; \
+                ln -sf /usr/bin/ccache "/usr/lib/ccache/$filename"; \
             fi; \
         done; \
     done
+
+# verilator
+COPY --from=verilator /usr/local/bin /usr/local/bin
+COPY --from=verilator /usr/local/share/verilator /usr/local/share/verilator
 
 # Mill (Scala build tool)
 RUN curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.7/mill-dist-1.1.7-mill.sh \
