@@ -20,7 +20,7 @@ RUN apt-get update \
         sudo vim nano git autoconf bear openssh-client lsof less wget \
         libfl2 \
         libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev libncurses-dev libreadline-dev\
-        clang clangd yosys openjdk-21-jdk-headless bash-completion \
+        clang clangd yosys openjdk-21-jdk-headless bash-completion xxd \
         ccache build-essential curl \
         python-is-python3 bison flex\
     && apt-get clean && rm -rf /var/lib/apt/lists/*
