@@ -21,6 +21,7 @@ RUN apt-get update \
         libfl2 \
         libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev libncurses-dev libreadline-dev\
         clang clangd yosys openjdk-21-jdk-headless bash-completion xxd \
+        gtkwave libunwind-dev liblzma-dev \
         ccache build-essential curl \
         python-is-python3 bison flex\
     && apt-get clean && rm -rf /var/lib/apt/lists/*
