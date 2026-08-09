@@ -65,7 +65,6 @@ RUN mkdir -p ${NVM_DIR} \
 COPY .bashrc /etc/skel/.bashrc
 
 # Development user (shared, keep root for later stage extensibility)
-
 ARG USERNAME=devuser
 ARG USER_UID=1000
 ARG USER_GID=1000

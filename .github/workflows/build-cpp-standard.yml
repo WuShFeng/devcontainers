@@ -1,4 +1,4 @@
-name: Build qt-cross
+name: Build cpp-standard
 
 on:
   schedule:
@@ -6,17 +6,17 @@ on:
   push:
     branches: [main]
     paths:
-      - qt-cross/**
+      - cpp-standard/**
     tags: ['v*.*.*']
   pull_request:
     branches: [main]
     paths:
-      - qt-cross/**
+      - cpp-standard/**
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/devcontainer-qt-cross
+  IMAGE_NAME: ${{ github.repository_owner }}/devcontainer-cpp-standard
 
 jobs:
   build:
@@ -55,7 +55,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
-          context: qt-cross
+          context: cpp-standard
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

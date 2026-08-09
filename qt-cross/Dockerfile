@@ -1,8 +1,3 @@
-# =============================================================================
-# Qt cross-platform development container
-# Targets: Linux / Windows (MinGW) / Android
-# =============================================================================
-
 FROM ubuntu:26.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,11 +6,7 @@ ARG TZ=Asia/Shanghai
 ARG LANG=zh_CN.UTF-8
 ENV TZ=${TZ}
 
-# ---------------------------------------------------------------------------
-# 1. System packages
-# ---------------------------------------------------------------------------
-
-# APT mirror (defaults to Ubuntu official when not set)
+# APT mirror
 ARG APT_MIRROR=""
 RUN export LANG=C.UTF-8 LC_ALL=C.UTF-8 \
     && apt-get update \
@@ -40,15 +31,13 @@ RUN export LANG=C.UTF-8 LC_ALL=C.UTF-8 \
     libwayland-egl1 libwayland-cursor0 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Locale
 RUN if [ -n "${LANG}" ]; then \
     sed -i "/${LANG}/s/^# //g" /etc/locale.gen && locale-gen; \
     fi
 ENV LANG=${LANG} LC_ALL=${LANG}
 
-# ---------------------------------------------------------------------------
-# 2. Android SDK / NDK
-# ---------------------------------------------------------------------------
-
+# Android SDK / NDK
 ARG ANDROID_SDK_ROOT=/opt/android-sdk
 ARG ANDROID_NDK_VERSION=27.3.13750724
 ARG ANDROID_PLATFORM_VERSION=35
@@ -78,10 +67,7 @@ RUN ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install \
     2>/dev/null || echo "Some Android components may need a retry" \
     && rm -rf ${ANDROID_SDK_ROOT}/.temp ${ANDROID_SDK_ROOT}/.cache /root/.android/cache /tmp/* /var/tmp/*
 
-# ---------------------------------------------------------------------------
-# 3. Qt (via aqtinstall)
-# ---------------------------------------------------------------------------
-
+# Qt (via aqtinstall)
 ARG QT_VERSION=6.10.3
 ARG QT_INSTALL_DIR=/opt/Qt
 ARG QT_LINUX_ARCH=linux_gcc_64
@@ -92,12 +78,10 @@ ARG QT_MODULES="qt5compat qtimageformats qtshadertools qtmultimedia qtwebsockets
 ENV QT_VERSION=${QT_VERSION}
 ENV QT_INSTALL_DIR=${QT_INSTALL_DIR}
 
-# aqtinstall
 RUN python3 -m venv /opt/venv-qt \
     && /opt/venv-qt/bin/pip install --no-cache-dir aqtinstall \
     && rm -rf /root/.cache/pip /tmp/* /var/tmp/*
 
-# Linux host Qt (build tools moc/uic/rcc + native builds)
 RUN /opt/venv-qt/bin/aqt install-qt \
     linux desktop ${QT_VERSION} ${QT_LINUX_ARCH} \
     --outputdir ${QT_INSTALL_DIR} \
@@ -106,7 +90,6 @@ RUN /opt/venv-qt/bin/aqt install-qt \
     && echo "Qt ${QT_VERSION} Linux installed" \
     && find ${QT_INSTALL_DIR}/${QT_VERSION}/${QT_LINUX_ARCH} -name '*.so*' -type f -exec strip --strip-unneeded {} \; 2>/dev/null || true
 
-# Windows MinGW target Qt (cross-compile dependency)
 RUN /opt/venv-qt/bin/aqt install-qt \
     windows desktop ${QT_VERSION} ${QT_MINGW_ARCH} \
     --outputdir ${QT_INSTALL_DIR} \
@@ -115,7 +98,6 @@ RUN /opt/venv-qt/bin/aqt install-qt \
     && echo "Qt ${QT_VERSION} Windows MinGW installed" \
     && find ${QT_INSTALL_DIR}/${QT_VERSION}/${QT_MINGW_ARCH} \( -name '*.dll' -o -name '*.exe' \) -exec x86_64-w64-mingw32-strip --strip-unneeded {} \; 2>/dev/null || true
 
-# Android target Qt (cross-compile dependency)
 RUN /opt/venv-qt/bin/aqt install-qt \
     linux android ${QT_VERSION} android_arm64_v8a \
     --outputdir ${QT_INSTALL_DIR} \
@@ -125,17 +107,14 @@ RUN /opt/venv-qt/bin/aqt install-qt \
     && find ${QT_INSTALL_DIR}/${QT_VERSION}/android_arm64_v8a -name '*.so*' -type f -exec ${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip --strip-unneeded {} \; 2>/dev/null || true \
     && rm -rf /root/.aqt /tmp/* /var/tmp/*
 
-# Qt environment variables
+# Qt environment
 ENV QT_HOST_PATH=${QT_INSTALL_DIR}/${QT_VERSION}/gcc_64
 ENV QT_MINGW_PATH=${QT_INSTALL_DIR}/${QT_VERSION}/mingw_64
 ENV PATH="${QT_HOST_PATH}/bin:${PATH}"
 ENV PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}"
 ENV CMAKE_PREFIX_PATH="${QT_HOST_PATH}:${CMAKE_PREFIX_PATH}"
 
-# ---------------------------------------------------------------------------
-# 4. Development user
-# ---------------------------------------------------------------------------
-
+# Development user
 ARG USERNAME=devuser
 ARG USER_UID=1000
 ARG USER_GID=1000
