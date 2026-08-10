@@ -23,7 +23,7 @@ RUN apt-get update \
         clang clangd yosys openjdk-21-jdk-headless bash-completion xxd device-tree-compiler\
         gtkwave libunwind-dev liblzma-dev unzip gdb iverilog \
         ccache build-essential curl \
-        python-is-python3 bison flex\
+        python-is-python3 bison flex scons\
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=${LANG} LC_ALL=${LANG}
