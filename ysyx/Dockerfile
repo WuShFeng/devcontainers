@@ -9,6 +9,7 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /workspaces
 ENV PATH="/usr/lib/ccache:/opt/riscv/bin:${PATH}"
+RUN echo 'export PATH="$HOME/.local/bin:${PATH}"' > /etc/profile.d/local-bin.sh
 
 # System packages
 RUN apt-get update \
