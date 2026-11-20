@@ -1,20 +1,20 @@
-name: Build qt-cross
+name: Build oss-cad-suite
 
 on:
   push:
     branches: [main]
     paths:
-      - qt-cross/**
+      - lib/oss-cad-suite/**
     tags: ['v*.*.*']
   pull_request:
     branches: [main]
     paths:
-      - qt-cross/**
+      - lib/oss-cad-suite/**
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/devcontainer-qt-cross
+  IMAGE_NAME: ${{ github.repository_owner }}/devcontainer-oss-cad-suite
 
 jobs:
   build:
@@ -48,12 +48,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=20260929
 
       - name: Build and push
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
-          context: qt-cross
+          context: lib/oss-cad-suite
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
