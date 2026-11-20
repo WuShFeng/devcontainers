@@ -7,13 +7,12 @@ RUN echo 'export PATH="$HOME/.local/bin:${PATH}"' > /etc/profile.d/local-bin.sh
 # System packages
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates vim nano git autoconf bear openssh-client lsof less wget \
         libfl2 \
         libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev libncurses-dev libreadline-dev\
         clang clangd yosys openjdk-21-jdk-headless bash-completion xxd device-tree-compiler\
         gtkwave libunwind-dev liblzma-dev unzip gdb iverilog \
-        ccache build-essential curl \
-        python-is-python3 bison flex scons\
+        ccache \
+        bison flex scons\
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # riscv-gnu-toolchain
@@ -47,18 +46,14 @@ ENV PATH="${PYENV_ROOT}/bin:${PATH}"
 # nvm (system-wide)
 ENV NVM_DIR=/usr/local/nvm
 RUN mkdir -p ${NVM_DIR} \
-    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash \
+    && chown -R devuser:devuser ${NVM_DIR}
 
 # Shell config (shared)
 COPY .bashrc /etc/skel/.bashrc
-
-# Development user
-ARG USERNAME=devuser
-RUN chown -R ${USERNAME}:${USERNAME} /usr/local/nvm
 
 # Target: ysyx
 FROM base AS ysyx
 
 ARG USERNAME=devuser
 USER ${USERNAME}
-CMD ["/bin/bash"]
