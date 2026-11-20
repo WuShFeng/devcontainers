@@ -9,7 +9,7 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        ca-certificates locales sudo && \
+        autoconf bear build-essential ca-certificates curl git less locales lsof nano openssh-client python-is-python3 sudo vim wget && \
     for loc in ${LANG} ${EXTRA_LOCALES}; do \
         sed -i "/^# *${loc} /s/^# *//" /etc/locale.gen; \
     done && \
