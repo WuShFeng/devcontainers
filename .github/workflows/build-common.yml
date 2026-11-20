@@ -52,7 +52,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=20261120
+            type=raw,value=latest
 
       - name: Build and push
         id: build-and-push
