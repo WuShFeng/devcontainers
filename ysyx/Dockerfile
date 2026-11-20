@@ -1,24 +1,13 @@
 FROM docker.io/verilator/verilator:v5.048 AS verilator
 FROM docker.io/wushf/riscv-gnu-toolchain:2026.6.29 AS riscv-gnu-toolchain
-FROM docker.io/library/ubuntu:26.04 AS base
-ARG TZ=Asia/Shanghai
-ARG LANG=zh_CN.UTF-8
-ENV TZ=${TZ}
-ENV DEBIAN_FRONTEND=noninteractive
-SHELL ["/bin/bash", "-c"]
-
-WORKDIR /workspaces
+FROM ghcr.io/wushfeng/devcontainer-common:latest AS base
 ENV PATH="/usr/lib/ccache:/opt/riscv/bin:${PATH}"
 RUN echo 'export PATH="$HOME/.local/bin:${PATH}"' > /etc/profile.d/local-bin.sh
 
 # System packages
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates locales \
-    && if [ -n "${LANG}" ]; then \
-        sed -i "/${LANG}/s/^# //g" /etc/locale.gen && locale-gen; \
-    fi \
     && apt-get install -y --no-install-recommends \
-        sudo vim nano git autoconf bear openssh-client lsof less wget \
+        ca-certificates vim nano git autoconf bear openssh-client lsof less wget \
         libfl2 \
         libsdl2-image-dev libsdl2-ttf-dev libsdl2-dev libncurses-dev libreadline-dev\
         clang clangd yosys openjdk-21-jdk-headless bash-completion xxd device-tree-compiler\
@@ -26,8 +15,6 @@ RUN apt-get update \
         ccache build-essential curl \
         python-is-python3 bison flex scons\
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ENV LANG=${LANG} LC_ALL=${LANG}
 
 # riscv-gnu-toolchain
 COPY --from=riscv-gnu-toolchain /opt/riscv /opt/riscv
@@ -65,24 +52,9 @@ RUN mkdir -p ${NVM_DIR} \
 # Shell config (shared)
 COPY .bashrc /etc/skel/.bashrc
 
-# Development user (shared, keep root for later stage extensibility)
+# Development user
 ARG USERNAME=devuser
-ARG USER_UID=1000
-ARG USER_GID=1000
-RUN if getent passwd ${USER_UID} >/dev/null; then \
-        OLDUSER=$(getent passwd ${USER_UID} | cut -d: -f1); \
-        OLDGID=$(id -g ${OLDUSER}); \
-        OLDGROUP=$(getent group ${OLDGID} | cut -d: -f1); \
-        usermod -l ${USERNAME} -d /home/${USERNAME} -m ${OLDUSER}; \
-        groupmod -n ${USERNAME} ${OLDGROUP}; \
-        usermod -g ${USERNAME} ${USERNAME}; \
-    else \
-        groupadd --gid ${USER_GID} ${USERNAME}; \
-        useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME}; \
-    fi \
-    && echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USERNAME}
-
-RUN chown -R ${USERNAME}:${USERNAME} /workspaces /usr/local/nvm
+RUN chown -R ${USERNAME}:${USERNAME} /usr/local/nvm
 
 # Target: ysyx
 FROM base AS ysyx

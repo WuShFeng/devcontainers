@@ -1,4 +1,4 @@
-FROM ubuntu:26.04
+FROM ghcr.io/wushfeng/devcontainer-common:latest
 
 COPY --from=anaconda/miniconda:latest /opt/miniconda3 /opt/miniconda3
 ENV PATH=/opt/miniconda3/bin:$PATH
@@ -31,4 +31,10 @@ RUN . /opt/miniconda3/etc/profile.d/conda.sh && \
 RUN git clone --depth 1 --branch master "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git" /opt/OpenROAD-flow-scripts
 
 ENV KEPLER_FORMAL_EXE=/usr/local/bin/kepler-formal
+
+ARG USERNAME=devuser
+RUN chown -R ${USERNAME}:${USERNAME} /opt/OpenROAD-flow-scripts
+
+USER ${USERNAME}
+CMD ["/bin/bash"]
 
