@@ -1,6 +1,8 @@
 name: Build common
 
 on:
+  schedule:
+    - cron: '0 9 * * *'
   push:
     branches: [main]
     paths:
