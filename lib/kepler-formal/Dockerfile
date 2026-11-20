@@ -2,7 +2,7 @@ FROM docker.io/library/ubuntu:26.04 AS builder
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        ca-certificates git wget && \
+        ca-certificates git python3 wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
