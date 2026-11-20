@@ -1,7 +1,8 @@
 FROM docker.io/library/ubuntu:26.04
 
 ARG TZ=Asia/Shanghai
-ARG LANG=zh_CN.UTF-8
+ARG LANG=en_US.UTF-8
+ARG EXTRA_LOCALES="zh_CN.UTF-8"
 ENV TZ=${TZ}
 ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
@@ -9,9 +10,10 @@ SHELL ["/bin/bash", "-c"]
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates locales sudo && \
-    if [ -n "${LANG}" ]; then \
-        sed -i "/${LANG}/s/^# //g" /etc/locale.gen && locale-gen; \
-    fi && \
+    for loc in ${LANG} ${EXTRA_LOCALES}; do \
+        sed -i "/^# *${loc} /s/^# *//" /etc/locale.gen; \
+    done && \
+    locale-gen && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=${LANG} LC_ALL=${LANG}
