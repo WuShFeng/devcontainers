@@ -3,7 +3,6 @@ FROM docker.io/library/ubuntu:24.04 AS builder
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates wget && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN wget -O /tmp/oss-cad-suite.tgz \

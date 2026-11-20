@@ -3,7 +3,6 @@ FROM docker.io/library/ubuntu:26.04 AS builder
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates git python3 wget && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN wget -O /tmp/bazelisk.deb \
@@ -11,7 +10,6 @@ RUN wget -O /tmp/bazelisk.deb \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends /tmp/bazelisk.deb && \
     rm -f /tmp/bazelisk.deb && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 --branch main \

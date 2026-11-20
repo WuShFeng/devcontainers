@@ -14,7 +14,7 @@ RUN apt-get update && \
         sed -i "/^# *${loc} /s/^# *//" /etc/locale.gen; \
     done && \
     locale-gen && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*
 
 ENV LANG=${LANG} LC_ALL=${LANG}
 

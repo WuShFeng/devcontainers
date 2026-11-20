@@ -13,7 +13,7 @@ RUN apt-get update \
         gtkwave libunwind-dev liblzma-dev unzip gdb iverilog \
         ccache \
         bison flex scons\
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # riscv-gnu-toolchain
 COPY --from=riscv-gnu-toolchain /opt/riscv /opt/riscv

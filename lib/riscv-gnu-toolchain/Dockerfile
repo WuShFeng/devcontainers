@@ -7,7 +7,6 @@ RUN apt-get update && \
         build-essential bison flex texinfo gperf libtool patchutils \
         bc zlib1g-dev libexpat-dev ninja-build git cmake \
         libglib2.0-dev libslirp-dev libncurses-dev && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/riscv/riscv-gnu-toolchain --depth 1
 RUN cd riscv-gnu-toolchain && \
