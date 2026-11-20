@@ -2,7 +2,7 @@ name: Build common
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '0 9 * * 0'
   push:
     branches: [main]
     paths:
