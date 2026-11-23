@@ -12,24 +12,26 @@ COPY --from=ghcr.io/wushfeng/devcontainer-kepler-formal:latest /opt/kepler-forma
 
 
 RUN apt-get update && \
-    wget -O /tmp/bazelisk.deb "https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-amd64.deb" && \
-    apt-get install -y /tmp/bazelisk.deb && \
-    rm -f /tmp/bazelisk.deb && \
+    apt-get install -y --no-install-recommends \
+        libqt6gui6 && \
     rm -rf /var/lib/apt/lists/*
-
-RUN . /opt/miniconda3/etc/profile.d/conda.sh && \
-    conda activate base && \
-    git clone --depth 1 --branch master --recurse-submodules --shallow-submodules \
-        "https://github.com/The-OpenROAD-Project/OpenROAD.git" /opt/OpenROAD && \
-    cd /opt/OpenROAD && \
-    ./etc/DependencyInstaller.sh -base && \
-    ./etc/Build.sh -prefix=/usr/local && \
-    rm -rf /opt/OpenROAD /root/.cache/bazel /root/.cache/bazelisk
 
 RUN git clone --depth 1 --branch master "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git" /opt/OpenROAD-flow-scripts && \
     chown -R ${USERNAME}:${USERNAME} /opt/OpenROAD-flow-scripts
 
+RUN curl -fsSL -o /tmp/openroad.tar.gz \
+        "https://github.com/WuShFeng/OpenROAD/releases/download/latest/openroad-master-linux-x86_64.tar.gz" && \
+    tar -xzf /tmp/openroad.tar.gz -C /opt && \
+    mv /opt/openroad/bin/openroad /usr/local/bin/openroad && \
+    rm -rf /opt/openroad /tmp/openroad.tar.gz
+
+RUN . /opt/miniconda3/etc/profile.d/conda.sh && \
+    conda activate base && \
+    pip install --no-cache-dir --no-deps \
+        "https://github.com/WuShFeng/OpenROAD/releases/download/latest/openroad-0.0.1-cp310-abi3-linux_x86_64.whl"
+
 ENV KEPLER_FORMAL_EXE=/usr/local/bin/kepler-formal
+ENV OPENROAD_EXE=/usr/local/bin/openroad
 
 USER ${USERNAME}
 
