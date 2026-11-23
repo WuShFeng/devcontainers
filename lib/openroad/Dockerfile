@@ -17,6 +17,9 @@ RUN git clone --depth 1 --branch master --recurse-submodules --shallow-submodule
     cd /tmp/OpenROAD && \
     ./etc/DependencyInstaller.sh -base && \
     ./etc/Build.sh -prefix=/opt/openroad && \
+    bazelisk build //python/openroad:openroad_wheel && \
+    mkdir -p /opt/openroad/wheels && \
+    cp bazel-bin/python/openroad/*.whl /opt/openroad/wheels/ && \
     rm -rf /tmp/OpenROAD /root/.cache/bazel /root/.cache/bazelisk
 
 FROM alpine:latest AS exporter
