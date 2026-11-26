@@ -2,13 +2,18 @@ FROM ghcr.io/wushfeng/devcontainer-common:latest AS ispd27-base
 
 ARG USERNAME=devuser
 
-COPY --from=anaconda/miniconda:latest /opt/miniconda3 /opt/miniconda3
-ENV PATH=/opt/miniconda3/bin:$PATH
-
-RUN . /opt/miniconda3/etc/profile.d/conda.sh && \
+RUN mkdir -p /opt/miniconda3 && \
+    wget -q https://repo.anaconda.com/miniconda/Miniconda3-py312_26.9.4-1-Linux-x86_64.sh \
+        -O /opt/miniconda3/miniconda.sh && \
+    bash /opt/miniconda3/miniconda.sh -b -u -p /opt/miniconda3 && \
+    rm -f /opt/miniconda3/miniconda.sh && \
+    . /opt/miniconda3/etc/profile.d/conda.sh && \
     conda activate base && \
     CONDA_PLUGINS_AUTO_ACCEPT_TOS=true conda install -y python=3.12 && \
+    CONDA_PLUGINS_AUTO_ACCEPT_TOS=true conda install -y -c conda-forge tbb-devel && \
     conda clean -afy
+
+ENV PATH=/opt/miniconda3/bin:$PATH
 
 COPY --from=ghcr.io/wushfeng/devcontainer-oss-cad-suite:20260929 /opt/oss-cad-suite /opt/oss-cad-suite
 ENV PATH=/opt/oss-cad-suite/bin:$PATH
@@ -45,7 +50,7 @@ ARG USERNAME=devuser
 
 RUN . /opt/miniconda3/etc/profile.d/conda.sh && \
     conda activate base && \
-    pip3 install --no-cache-dir torch torchvision torchaudio \
+    pip3 install --no-cache-dir torch torchvision \
         --index-url https://download.pytorch.org/whl/xpu && \
     pip cache purge && \
     conda clean -afy
