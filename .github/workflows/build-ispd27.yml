@@ -18,7 +18,61 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/devcontainer-ispd27
 
 jobs:
-  build:
+  # 先构建公共前置（ispd27-base 阶段）并写入缓存，供 variants 复用
+  base:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: 'type=raw,value=base'
+
+      - name: Build and push
+        id: build-and-push
+        uses: docker/build-push-action@v6
+        with:
+          context: ispd27
+          target: ispd27
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=ispd27-base
+          cache-to: type=gha,mode=max,scope=ispd27-base
+
+      - name: Sign the published image
+        if: github.event_name != 'pull_request'
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
+  variants:
+    needs: base
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,8 +82,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: ispd27
-            tags: 'type=raw,value=base'
           - target: xpu
             tags: 'type=raw,value=xpu'
           - target: cuda
@@ -70,7 +122,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=ispd27-${{ matrix.target }}
+          cache-from: |
+            type=gha,scope=ispd27-base
+            type=gha,scope=ispd27-${{ matrix.target }}
           cache-to: type=gha,mode=max,scope=ispd27-${{ matrix.target }}
 
       - name: Sign the published image
