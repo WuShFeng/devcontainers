@@ -9,7 +9,6 @@ RUN mkdir -p /opt/miniconda3 && \
     rm -f /opt/miniconda3/miniconda.sh && \
     . /opt/miniconda3/etc/profile.d/conda.sh && \
     conda activate base && \
-    CONDA_PLUGINS_AUTO_ACCEPT_TOS=true conda install -y python=3.12 && \
     CONDA_PLUGINS_AUTO_ACCEPT_TOS=true conda install -y -c conda-forge tbb-devel && \
     conda clean -afy
 
