@@ -22,7 +22,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL -o /tmp/openroad.tar.gz \
-        "https://github.com/WuShFeng/OpenROAD/releases/download/latest/openroad-master-linux-x86_64.tar.gz" && \
+        "https://github.com/WuShFeng/OpenROAD/releases/latest/download/openroad-master-linux-x86_64.tar.gz" && \
     tar -xzf /tmp/openroad.tar.gz -C /opt && \
     mv /opt/openroad/bin/openroad /usr/local/bin/openroad && \
     rm -rf /opt/openroad /tmp/openroad.tar.gz
@@ -30,7 +30,7 @@ RUN curl -fsSL -o /tmp/openroad.tar.gz \
 RUN . /opt/miniconda3/etc/profile.d/conda.sh && \
     conda activate base && \
     pip install --no-cache-dir --no-deps \
-        "https://github.com/WuShFeng/OpenROAD/releases/download/latest/openroad-0.0.1-cp310-abi3-linux_x86_64.whl" && \
+        "https://github.com/WuShFeng/OpenROAD/releases/latest/download/openroad-0.0.1-cp310-abi3-linux_x86_64.whl" && \
     pip cache purge && \
     conda clean -afy
 
