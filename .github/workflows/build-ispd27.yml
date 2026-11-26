@@ -24,6 +24,16 @@ jobs:
       contents: read
       packages: write
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ispd27
+            tags: 'type=raw,value=base'
+          - target: xpu
+            tags: 'type=raw,value=xpu'
+          - target: cuda
+            tags: 'type=raw,value=cuda'
 
     steps:
       - name: Checkout repository
@@ -49,17 +59,19 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: ${{ matrix.tags }}
 
       - name: Build and push
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
           context: ispd27
+          target: ${{ matrix.target }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=ispd27-${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=ispd27-${{ matrix.target }}
 
       - name: Sign the published image
         if: github.event_name != 'pull_request'
