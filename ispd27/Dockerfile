@@ -38,6 +38,10 @@ RUN . /opt/miniconda3/etc/profile.d/conda.sh && \
     pip cache purge && \
     conda clean -afy
 
+USER ${USERNAME}
+RUN /opt/miniconda3/bin/conda init --all
+USER root
+
 
 ENV KEPLER_FORMAL_EXE=/usr/local/bin/kepler-formal
 ENV OPENROAD_EXE=/usr/local/bin/openroad
